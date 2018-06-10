@@ -62,11 +62,12 @@ module Floating_Point_Adder(
 
                 a_sign      <= a[63];
                 b_sign      <= a[63];
-                a_exponent  <= a[62 : 52] - 10'h3FF;
-                b_exponent  <= b[62 : 52] - 10'h3FF;
+                a_exponent  <= a[62 : 52] - 11'h3FF;
+                b_exponent  <= b[62 : 52] - 11'h3FF;
                 a_mantissa  <= {a[51 : 0], 3'h0};
                 b_mantissa  <= {b[51 : 0], 3'h0};
                 State       <= Limiting_Cases;
+
             end
 
             Limiting_Cases:
@@ -75,15 +76,28 @@ module Floating_Point_Adder(
                 if (a_exponent == && a_mantissa != 0 || b_exponent == && b_mantissa != 0) begin
                     sum     <= 64'hFFF8000000000000;
                     State   <= SUM_output;
-                end else if (a_exponent == 10'h400) begin
+                end else if (a_exponent == 11'h400) begin
                     sum     <= {a_sign, 63'h7FF0000000000000};
-                    if (b_exponent == 10'h400 && (a_sign != b_sign)) begin
-                        sum <= 64'hFFF8000000000000;
-                    end
+                    sum     <= b_exponent == 10'h400 && (a_sign != b_sign) ?  64'hFFF8000000000000 : sum;
                     state   <= SUM_output;
-                end else if (b_exponent == 10'h400) begin
+                end else if (b_exponent == 11'h400) begin
                     sum     <= {b_sign, 63'h7FF0000000000000};
                     state   <= SUM_output;
+                end else if ((($signed(a_exponent) == -11'h3FF) && (a_mantissa == 0)) && (($signed(b_exponent) == -10'h3FF) && (b_mantissa == 0))) begin
+                    sum     <= {a_sign & b_sign,b_exponent[10:0] + 11'h3FF,b_mantissa[55:3]};
+                    State   <= SUM_output;
+                end else if (($signed(a_exponent) == -11'h3FF) && (a_mantissa == 0)) begin
+                    sum     <= {b_sign,b_exponent[10:0] + 11'h3FF,b_mantissa[55:3]}
+                    State   <= SUM_output;
+                end else if (($signed(b_e) == -11'h3FF) && (b_m == 0)) begin
+                    sum     <= {a_sign,a_exponent[10:0] + 11'h3FF,a_mantissa[55:3]}
+                    State   <= SUM_output;
+                end else begin
+                    if ($signed(b_exponent) == -11'h3FF) begin
+                        b_exponent <= -11'h3FE;
+                    end else begin
+                        b_mantissa[55] <= 1'h1;
+                    end
                 end
 
             end
