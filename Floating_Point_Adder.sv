@@ -3,9 +3,9 @@
   */
 
 module Floating_Point_Adder(
-    input   logic Clock,Reset,A_stb,B_stb,
+    input   logic Clock,Reset,A_store_bit,B_store_bit,
     input   logic [63:0]A,B,
-    output  logic A_ack,B_ack,SUM_ack,SUM_stb,
+    output  logic A_acknowledgment,B_acknowledgment,SUM_acknowledgment,SUM_store_bit,
     output  logic [63:0]SUM
 );
     localparam Store_a          = 4'h0,
@@ -22,7 +22,7 @@ module Floating_Point_Adder(
                SUM_output       = 4'hB;
 
 
-    logic temp_SUM_stb,temp_a_ack,temp_b_ack;
+    logic temp_SUM_store_bit,temp_a_acknowledgment,temp_b_acknowledgment;
     logic [63:0]temp_SUM;
 
     logic [3:0]State;
@@ -39,20 +39,20 @@ module Floating_Point_Adder(
 
             Store_a: 
             begin
-                temp_a_ack <= 1;
-                if (A_stb && temp_a_ack) begin
+                temp_a_acknowledgment <= 1;
+                if (A_store_bit && temp_a_acknowledgment) begin
                     a <= A;
-                    temp_a_ack <= 0;
+                    temp_a_acknowledgment <= 0;
                     State <= Store_b;
                 end
             end
 
             Store_b: 
             begin
-                temp_b_ack <= 1;
-                if (B_stb && temp_b_ack) begin
+                temp_b_acknowledgment <= 1;
+                if (B_store_bit && temp_b_acknowledgment) begin
                     b <= B;
-                    temp_b_ack <= 0;
+                    temp_b_acknowledgment <= 0;
                     State <= Unpack;
                 end
             end
