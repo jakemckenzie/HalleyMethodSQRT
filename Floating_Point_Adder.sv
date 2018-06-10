@@ -1,3 +1,7 @@
+/**
+  * http://pages.cs.wisc.edu/~markhill/cs354/Fall2008/notes/flpt.apprec.html
+  */
+
 module Floating_Point_Adder(
     input   logic Clock,Reset,A_stb,B_stb,
     input   logic [63:0]A,B,
@@ -7,7 +11,7 @@ module Floating_Point_Adder(
     localparam Store_a          = 4'h0,
                Store_b          = 4'h1,
                Unpack           = 4'h2,
-               Limiting_Case    = 4'h3,
+               Limiting_Cases   = 4'h3,
                Alignment        = 4'h4,
                Add_0            = 4'h5,
                Add_1            = 4'h6,
@@ -51,6 +55,18 @@ module Floating_Point_Adder(
                     temp_b_ack <= 0;
                     State <= Unpack;
                 end
+            end
+
+            Unpack:
+            begin
+
+                a_sign      <= a[63];
+                b_sign      <= a[63];
+                a_exponent  <= a[62 : 52] - 10'h3FF;
+                b_exponent  <= b[62 : 52] - 10'h3FF;
+                a_mantissa  <= {a[51 : 0], 3'h0};
+                b_mantissa  <= {b[51 : 0], 3'h0};
+                State       <= Limiting_Cases;
             end
 
         endcase
