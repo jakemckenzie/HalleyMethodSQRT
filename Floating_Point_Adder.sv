@@ -69,6 +69,25 @@ module Floating_Point_Adder(
                 State       <= Limiting_Cases;
             end
 
+            Limiting_Cases:
+            begin
+
+                if (a_exponent == && a_mantissa != 0 || b_exponent == && b_mantissa != 0) begin
+                    sum     <= 64'hFFF8000000000000;
+                    State   <= SUM_output;
+                end else if (a_exponent == 10'h400) begin
+                    sum     <= {a_sign, 63'h7FF0000000000000};
+                    if (b_exponent == 10'h400 && (a_sign != b_sign)) begin
+                        sum <= 64'hFFF8000000000000;
+                    end
+                    state   <= SUM_output;
+                end else if (b_exponent == 10'h400) begin
+                    sum     <= {b_sign, 63'h7FF0000000000000};
+                    state   <= SUM_output;
+                end
+
+            end
+
         endcase
     end
 endmodule
