@@ -102,6 +102,21 @@ module Floating_Point_Adder(
                 State       <= Alignment;
             end
 
+            Alignment:
+            begin
+                if ($signed(a_exponent) > $signed(b_exponent)) begin
+                    b_exponent <= b_exponent + 1;
+                    b_mantissa <= b_mantissa >> 1;
+                    b_mantissa[0] <= b_mantissa[0] | b_mantissa[1];
+                  end else if ($signed(a_exponent) < $signed(b_exponent)) begin
+                    a_exponent <= a_exponent + 1;
+                    a_mantissa <= a_mantissa >> 1;
+                    a_mantissa[0] <= a_mantissa[0] | a_mantissa[1];
+                  end else begin
+                    State <= Add_0;
+                  end 
+            end
+
         endcase
     end
 endmodule
