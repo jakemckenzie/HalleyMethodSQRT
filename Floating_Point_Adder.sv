@@ -99,7 +99,7 @@ module Floating_Point_Adder(
                         b_mantissa[55] <= 1'h1;
                     end
                 end
-
+                State       <= Alignment;
             end
 
         endcase
