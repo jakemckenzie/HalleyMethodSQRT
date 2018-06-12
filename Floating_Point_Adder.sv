@@ -36,7 +36,11 @@ module Floating_Point_Adder(
     logic [56:0]Unrounded_Sum;
     always_ff @(posedge Clock) begin
         case(State)
-
+            /**
+              * A strong control pattern for storing bits, with two control inputs.
+              * 
+              * Finite State Machines in Hardware - Theory and Design Volnei A. Pedroni pg 16-17
+              */
             Store_a: 
             begin
                 temp_a_acknowledgment <= 1;
@@ -46,7 +50,11 @@ module Floating_Point_Adder(
                     State <= Store_b;
                 end
             end
-
+            /**
+              * A strong control pattern for storing bits, with two control inputs.
+              *
+              * Finite State Machines in Hardware - Theory and Design Volnei A. Pedroni pg 16-17 
+              */
             Store_b: 
             begin
                 temp_b_acknowledgment <= 1;
@@ -56,7 +64,11 @@ module Floating_Point_Adder(
                     State <= Unpack;
                 end
             end
-
+            /**
+              * Unpacks the contents of a and b for further processing.
+              * 
+              *   
+              */
             Unpack:
             begin
 
@@ -70,10 +82,48 @@ module Floating_Point_Adder(
 
             end
 
+            /**
+              * Many operations result in values that cannot be represented, we call 
+              * these limiting cases. A short list of limiting cases examples:
+              *
+              * 1/0 = infinity
+              * any positive value / 0 = positive infinity
+              * any negative value / 0 = negative infinity
+              * infinity * any value = infinity
+              * 1/infinity = 0
+              *
+              * 0/0 = NaN
+              * 0 * infinity = NaN
+              * infinity * infinity = NaN
+              * infinity - infinity = NaN
+              * infinity/infinity = NaN
+              *
+              * any value + NaN = NaN
+              * NaN + any value = NaN
+              * any value - NaN = NaN
+              * NaN - any value = NaN
+              * sqrt(negative value) = NaN
+              * NaN * any value = NaN
+              * NaN * 0 = NaN
+              * 1/NaN = NaN
+              * 
+              * In this case I attempt to take of most of the limiting cases. 
+              *
+              * If you are reading this module after the fact and hex values are hard
+              * to understand I suggest inputing the hex value I have for each
+              * part into rapid tables (https://www.rapidtables.com/convert/number/hex-to-binary.html)
+              * and seeing for yourself what it outputs. Each value is very specific as to why it is what
+              * it is. I am attempting to adhere strictly to the IEEE-754 standard.
+              * https://en.wikipedia.org/wiki/IEEE_754
+              * 
+              * The idea for this state came from reading:
+              * http://pages.cs.wisc.edu/~markhill/cs354/Fall2008/notes/flpt.apprec.html
+              */
+
             Limiting_Cases:
             begin
 
-                if (a_exponent == && a_mantissa != 0 || b_exponent == && b_mantissa != 0) begin
+                if (a_exponent == 11'h400 && a_mantissa != 0 || b_exponent == 11'h400 && b_mantissa != 0) begin
                     sum     <= 64'hFFF8000000000000;
                     State   <= SUM_output;
                 end else if (a_exponent == 11'h400) begin
@@ -101,16 +151,25 @@ module Floating_Point_Adder(
                 end
                 State       <= Alignment;
             end
+            /**
+              * The first step in doing addition or subtraction on flaoting point numbers
+              * is to align radix points. 
+              * 
+              * We first shift the matissa by 1 bit to the right. This ensures that
+              * the bits that fall off the end come from the least significant end
+              * of the mantissa. Since we shifted the matissa to the right we must also
+              * add 1 to the exponent. 
+              */
 
             Alignment:
             begin
                 if ($signed(a_exponent) > $signed(b_exponent)) begin
-                    b_exponent <= b_exponent + 1;
                     b_mantissa <= b_mantissa >> 1;
+                    b_exponent <= b_exponent + 1;
                     b_mantissa[0] <= b_mantissa[0] | b_mantissa[1];
                   end else if ($signed(a_exponent) < $signed(b_exponent)) begin
-                    a_exponent <= a_exponent + 1;
                     a_mantissa <= a_mantissa >> 1;
+                    a_exponent <= a_exponent + 1;
                     a_mantissa[0] <= a_mantissa[0] | a_mantissa[1];
                   end else begin
                     State <= Add_0;
