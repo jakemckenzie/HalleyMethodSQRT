@@ -176,6 +176,24 @@ module Floating_Point_Adder(
                   end 
             end
 
+            Add_0:
+            begin
+                sum_exponent <= a_exponent;
+                if (a_sign != b_sign) begin
+                    if (a_mantissa > b_mantissa) begin
+                        Unrounded_Sum <= {1'd0, a_mantissa} - b_mantissa;
+                        sum_sign <= a_sign;
+                    end else begin
+                        Unrounded_Sum <= {1'd0, b_mantissa} - a_mantissa;
+                        sum_sign <= b_sign;
+                    end
+                end else begin
+                    Unrounded_Sum <= {1'd0, a_mantissa} + b_mantissa;
+                    sum_sign <= a_sign;
+                end
+                State <= Add_1;
+            end
+            
         endcase
     end
 endmodule
