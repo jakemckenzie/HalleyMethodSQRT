@@ -194,6 +194,46 @@ module Floating_Point_Adder(
                 State <= Add_1;
             end
             
+            Add_1:
+            begin
+                if (Unrounded_Sum[56]) begin
+                    sum_mantissa <= Unrounded_Sum[56:4];
+                    guard_bit <= Unrounded_Sum[3];
+                    round_bit <= Unrounded_Sum[2];
+                    sticky_bit <= Unrounded_Sum[1] | Unrounded_Sum[0];
+                    sum_exponent <= sum_exponent + 1;
+                end else begin
+                    sum_mantissa <= Unrounded_Sum[55:3];
+                    guard_bit <= Unrounded_Sum[2];
+                    round_bit <= Unrounded_Sum[1];
+                    sticky_bit <= Unrounded_Sum[0];
+                end
+                State <= Normalize_0;
+            end
+            
+            Normalize_0:
+            begin
+                if (sum_mantissa[52] == 0 && $signed(sum_exponent) > -11'h3FE) begin
+                    sum_exponent <= sum_exponent - 1;
+                    sum_mantissa <= sum_mantissa << 1;
+                    sum_mantissa[0] <= guard_bit;
+                    guard_bit <= round_bit;
+                    round_bit <= 0;
+                end else Normalize_1
+            end
+
+            Normalize_1:
+            begin
+                if ($signed(sum_exponent) < -11'h3FE) begin
+                    sum_exponent <= sum_exponent + 1;
+                    sum_mantissa <= sum_mantissa >> 1;
+                    guard_bit <= sum_mantissa[0];
+                    round_bit <= guard_bit;
+                    sticky_bit <= sticky_bit | round_bit;
+                end else State <= round_bit;
+            end
+
+
         endcase
     end
 endmodule
