@@ -210,7 +210,7 @@ module Floating_Point_Adder(
                 end
                 State <= Normalize_0;
             end
-            
+
             Normalize_0:
             begin
                 if (sum_mantissa[52] == 0 && $signed(sum_exponent) > -11'h3FE) begin
@@ -230,9 +230,17 @@ module Floating_Point_Adder(
                     guard_bit <= sum_mantissa[0];
                     round_bit <= guard_bit;
                     sticky_bit <= sticky_bit | round_bit;
-                end else State <= round_bit;
+                end else State <= Round;
             end
 
+            Round:
+            begin
+                if ((round_bit | sticky_bit | sum_mantissa[0]) && guard_bit) begin
+                    sum_mantissa <= sum_mantissa + 1;
+                    sum_exponent <= (sum_mantissa == 53'h1FFFFFFFFFFFFF) ? sum_exponent + 1 : sum_exponent; 
+                end
+                State <= Pack;
+            end
 
         endcase
     end
