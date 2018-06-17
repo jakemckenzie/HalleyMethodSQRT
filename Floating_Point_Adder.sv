@@ -241,6 +241,22 @@ module Floating_Point_Adder(
                 end
                 State <= Pack;
             end
+            
+            Pack:
+            
+            begin
+                sum[51 : 0] <= sum_mantissa[51:0];
+                sum[62 : 52] <= sum_exponent[10:0] + 11'h3FF;
+                sum[63] <= sum_sign;
+                if ($signed(sum_exponent) == -11'h3FF && sum_mantissa[52] == 0) sum[62 : 52] <= 0;
+                if ($signed(sum_exponent) > 11'h3FF) begin
+                    sum[51 : 0] <= 0;
+                    sum[62 : 52] <= 11'h7FF;
+                    sum[63] <= z_s;
+                end
+                State <= SUM_output;
+            end
+
 
         endcase
     end
